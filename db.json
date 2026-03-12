@@ -1,0 +1,12 @@
+{
+  "users": [
+    {
+      "id": "1773130574939",
+      "name": "bijay",
+      "email": "bijay@gmail.com",
+      "password": "$2a$10$kmnNCdA.s.PPopu21QqGNenlmOTPEe/ZPXW07jo5pelkSvxTiWyu.",
+      "role": "admin",
+      "createdAt": "2026-03-10T08:16:14.939Z"
+    }
+  ]
+}
