@@ -101,7 +101,7 @@ const login = async (req, res) => {
         }
 
         // Generate JWT token
-        const expiresIn = "30s";
+        const expiresIn = "1h";
         const token = jwt.sign(
             { userId: user.id, email: user.email },
             config.jwtSecret,
@@ -109,7 +109,7 @@ const login = async (req, res) => {
         );
 
         // Calculate expiry time in milliseconds
-        const expiryMs = 30 * 1000; // 30 seconds in milliseconds
+        const expiryMs = 60 * 60 * 1000;
         const expiryTime = new Date(Date.now() + expiryMs);
 
         // Return user info and token (without password)

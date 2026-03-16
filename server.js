@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
 const config = require("./config/config");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
@@ -14,7 +15,8 @@ const swaggerOptions = {
         info: {
             title: "Dashboard API",
             version: "1.0.0",
-            description: "Authentication API for Dashboard application",
+            description:
+                "Authentication and User Management API for Dashboard application",
         },
         servers: [
             {
@@ -49,12 +51,13 @@ app.use(express.json());
 // Swagger UI
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Swagger JSON endpoint
-app.get("/api-docs.json", (req, res) => {
+app.get("/api/api-docs.json", (req, res) => {
     res.setHeader("Content-Type", "application/json");
     res.send(swaggerSpec);
 });
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 
 /**
  * @swagger
