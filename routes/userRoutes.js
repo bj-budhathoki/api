@@ -14,7 +14,7 @@ const router = express.Router();
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
- *         name: search
+ *         name: name
  *         schema:
  *           type: string
  *         description: Search term to filter users by name or email
@@ -23,6 +23,11 @@ const router = express.Router();
  *         schema:
  *           type: string
  *         description: Filter users by role
+ *       - in: query
+ *         name: skills
+ *         schema:
+ *           type: string
+ *         description: Filter users by skills
  *       - in: query
  *         name: page
  *         schema:
