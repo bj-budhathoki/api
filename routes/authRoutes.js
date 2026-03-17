@@ -48,9 +48,16 @@ const router = express.Router();
  *                   type: string
  *                 accessToken:
  *                   type: string
- *                 expiresIn:
+ *                 refreshToken:
  *                   type: string
- *                 expiresAt:
+ *                 accessTokenExpiresIn:
+ *                   type: string
+ *                 refreshTokenExpiresIn:
+ *                   type: string
+ *                 accessTokenExpiresAt:
+ *                   type: string
+ *                   format: date-time
+ *                 refreshTokenExpiresAt:
  *                   type: string
  *                   format: date-time
  *                 user:
@@ -109,9 +116,16 @@ router.post("/signup", authController.signup);
  *                   type: string
  *                 accessToken:
  *                   type: string
- *                 expiresIn:
+ *                 refreshToken:
  *                   type: string
- *                 expiresAt:
+ *                 accessTokenExpiresIn:
+ *                   type: string
+ *                 refreshTokenExpiresIn:
+ *                   type: string
+ *                 accessTokenExpiresAt:
+ *                   type: string
+ *                   format: date-time
+ *                 refreshTokenExpiresAt:
  *                   type: string
  *                   format: date-time
  *                 user:
@@ -137,9 +151,73 @@ router.post("/login", authController.login);
 
 /**
  * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Refresh access token
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 description: The refresh token obtained during login/signup
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 accessToken:
+ *                   type: string
+ *                 refreshToken:
+ *                   type: string
+ *                 accessTokenExpiresIn:
+ *                   type: string
+ *                 refreshTokenExpiresIn:
+ *                   type: string
+ *                 accessTokenExpiresAt:
+ *                   type: string
+ *                   format: date-time
+ *                 refreshTokenExpiresAt:
+ *                   type: string
+ *                   format: date-time
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Bad request - refresh token required
+ *       401:
+ *         description: Unauthorized - invalid or expired refresh token
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/refresh", authController.refreshToken);
+
+/**
+ * @swagger
  * /api/auth/profile:
  *   get:
- *     summary: Get user profile
  *     tags: [Authentication]
  *     security:
  *       - bearerAuth: []

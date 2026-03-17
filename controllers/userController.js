@@ -5,19 +5,17 @@ const config = require("../config/config");
 // Get all users with optional search parameters
 const getUsers = async (req, res) => {
     try {
-        const { search, role, page = 1, limit = 10 } = req.query;
-
+        const { name, role, page = 1, limit = 10 } = req.query;
+        console.log(name, role, page, limit);
         // Get all users from json-server
         const response = await axios.get(`${config.dbUrl}/users`);
         let users = response.data;
 
         // Apply search filter
-        if (search) {
-            const searchLower = search.toLowerCase();
+        if (name) {
+            const nameLower = name.toLowerCase();
             users = users.filter(
-                (user) =>
-                    user.name.toLowerCase().includes(searchLower) ||
-                    user.email.toLowerCase().includes(searchLower),
+                (user) => user.name.toLowerCase() === nameLower,
             );
         }
 
