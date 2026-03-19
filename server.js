@@ -45,7 +45,10 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 // Middleware
+// Allow all origins
 app.use(cors());
+// Handle preflight OPTIONS requests for all routes
+app.options("*", cors());
 app.use(express.json());
 
 // Swagger UI
