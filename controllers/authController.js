@@ -202,6 +202,7 @@ const refreshToken = async (req, res) => {
                 "X-Access-Key": `${config.xAccessKey}`,
             },
         });
+        const users = response?.data?.record?.users;
         const user = users.find((u) => u.id === decoded.userId);
 
         if (!user) {
