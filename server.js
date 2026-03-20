@@ -5,6 +5,7 @@ const userRoutes = require("./routes/userRoutes");
 const config = require("./config/config");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
+const { default: axios } = require("axios");
 
 const app = express();
 
@@ -61,7 +62,6 @@ app.get("/api/api-docs.json", (req, res) => {
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
-
 /**
  * @swagger
  * /api/health:

@@ -6,10 +6,15 @@ const config = require("../config/config");
 const getUsers = async (req, res) => {
     try {
         const { name, role, page = 1, limit = 10 } = req.query;
-        console.log(name, role, page, limit);
         // Get all users from json-server
-        const response = await axios.get(`${config.dbUrl}/users`);
-        let users = response.data;
+        const response = await axios.get(`${config.dbUrl}/${config.binID}`, {
+            headers: {
+                "Content-Type": "application/json",
+                "X-Master-Key": `${config.xMasterKey}`,
+                "X-Access-Key": `${config.xAccessKey}`,
+            },
+        });
+        let users = response?.data?.record?.users;
 
         // Apply search filter
         if (name) {

@@ -13,8 +13,14 @@ const signup = async (req, res) => {
             return res.status(400).json({ message: "All fields are required" });
         }
         // Get all users from json-server
-        const response = await axios.get(`${config.dbUrl}/users`);
-        const users = response.data;
+        const response = await axios.get(`${config.dbUrl}/${config.binID}`, {
+            headers: {
+                "Content-Type": "application/json",
+                "X-Master-Key": `${config.xMasterKey}`,
+                "X-Access-Key": `${config.xAccessKey}`,
+            },
+        });
+        const users = response?.data?.record?.users;
 
         // Check if user already exists
         const userExists = users.find((u) => u.email === email);
@@ -34,10 +40,20 @@ const signup = async (req, res) => {
             role,
             createdAt: new Date().toISOString(),
         };
-
+        const allUsers = [...users, newUser];
         // Save to json-server
-        const saveResponse = await axios.post(`${config.dbUrl}/users`, newUser);
-
+        const saveResponse = await axios.put(
+            `${config.dbUrl}/${config.binID}`,
+            { users: allUsers },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Master-Key": `${config.xMasterKey}`,
+                    "X-Access-Key": `${config.xAccessKey}`,
+                },
+            },
+        );
+        console.log({ saveResponse });
         // Generate JWT tokens
         const accessToken = jwt.sign(
             { userId: saveResponse.data.id, email: saveResponse.data.email },
@@ -91,8 +107,14 @@ const login = async (req, res) => {
         }
 
         // Get all users from json-server
-        const response = await axios.get(`${config.dbUrl}/users`);
-        const users = response.data;
+        const response = await axios.get(`${config.dbUrl}/${config.binID}`, {
+            headers: {
+                "Content-Type": "application/json",
+                "X-Master-Key": `${config.xMasterKey}`,
+                "X-Access-Key": `${config.xAccessKey}`,
+            },
+        });
+        const users = response?.data?.record?.users;
 
         // Find user by email
         const user = users.find((u) => u.email === email);
@@ -173,10 +195,14 @@ const refreshToken = async (req, res) => {
         }
 
         // Get user from database to ensure they still exist
-        const response = await axios.get(
-            `${config.dbUrl}/users/${decoded.userId}`,
-        );
-        const user = response.data;
+        const response = await axios.get(`${config.dbUrl}/${config.binID}`, {
+            headers: {
+                "Content-Type": "application/json",
+                "X-Master-Key": `${config.xMasterKey}`,
+                "X-Access-Key": `${config.xAccessKey}`,
+            },
+        });
+        const user = users.find((u) => u.id === decoded.userId);
 
         if (!user) {
             return res.status(401).json({ message: "User not found" });

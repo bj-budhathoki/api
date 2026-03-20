@@ -8,4 +8,7 @@ module.exports = {
     dbUrl: process.env.DB_URL || "http://localhost:3002",
     accessTokenExpiry: "15m", // Short-lived access tokens
     refreshTokenExpiry: "7d", // Long-lived refresh tokens
+    binID: process.env.BIN_ID,
+    xMasterKey: process.env.X_MASTER_KEY,
+    xAccessKey: process.env.X_ACCESS_KEY,
 };
