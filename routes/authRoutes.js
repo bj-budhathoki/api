@@ -245,4 +245,75 @@ router.get("/profile", authMiddleware, (req, res) => {
     });
 });
 
+/**
+ * @swagger
+ * /api/auth/reset:
+ *   post:
+ *     summary: Reset user password
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User's email address
+ *     responses:
+ *       200:
+ *         description: Password reset email sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Bad request - email required
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/reset", authController.resetPassword);
+
+/**
+ * @swagger
+ * /api/auth/update-password:
+ *   post:
+ *     summary: Update password using reset token
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - newPassword
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Password reset token received via email
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 6
+ *                 description: The new password
+ *     responses:
+ *       200:
+ *         description: Password updated successfully
+ *       400:
+ *         description: Bad request - missing fields
+ *       401:
+ *         description: Unauthorized - invalid or expired token
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/update-password", authController.updatePassword);
+
 module.exports = router;

@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const config = require("../config/config");
+const emailService = require("../services/emailService");
 
 // Signup Controller
 const signup = async (req, res) => {
@@ -68,10 +69,12 @@ const signup = async (req, res) => {
         );
 
         // Calculate expiry times
-        const accessExpiryMs = 15 * 60 * 1000; // 15 minutes
-        const refreshExpiryMs = 7 * 24 * 60 * 60 * 1000; // 7 days
-        const accessExpiryTime = new Date(Date.now() + accessExpiryMs);
-        const refreshExpiryTime = new Date(Date.now() + refreshExpiryMs);
+        const accessExpiryTime = new Date(
+            Date.now() + config.accessTokenExpiryMs,
+        );
+        const refreshExpiryTime = new Date(
+            Date.now() + config.refreshTokenExpiryMs,
+        );
 
         const { password: _, ...userWithoutPassword } = saveResponse.data;
 
@@ -79,8 +82,6 @@ const signup = async (req, res) => {
             message: "User registered successfully",
             accessToken: accessToken,
             refreshToken: refreshToken,
-            accessTokenExpiresIn: config.accessTokenExpiry,
-            refreshTokenExpiresIn: config.refreshTokenExpiry,
             accessTokenExpiresAt: accessExpiryTime.toISOString(),
             refreshTokenExpiresAt: refreshExpiryTime.toISOString(),
             user: userWithoutPassword,
@@ -146,10 +147,12 @@ const login = async (req, res) => {
         );
 
         // Calculate expiry times
-        const accessExpiryMs = 15 * 60 * 1000; // 15 minutes
-        const refreshExpiryMs = 7 * 24 * 60 * 60 * 1000; // 7 days
-        const accessExpiryTime = new Date(Date.now() + accessExpiryMs);
-        const refreshExpiryTime = new Date(Date.now() + refreshExpiryMs);
+        const accessExpiryTime = new Date(
+            Date.now() + config.accessTokenExpiryMs,
+        );
+        const refreshExpiryTime = new Date(
+            Date.now() + config.refreshTokenExpiryMs,
+        );
 
         // Return user info and tokens (without password)
         const { password: _, ...userWithoutPassword } = user;
@@ -157,8 +160,6 @@ const login = async (req, res) => {
             message: "Login successful",
             accessToken: accessToken,
             refreshToken: refreshToken,
-            accessTokenExpiresIn: config.accessTokenExpiry,
-            refreshTokenExpiresIn: config.refreshTokenExpiry,
             accessTokenExpiresAt: accessExpiryTime.toISOString(),
             refreshTokenExpiresAt: refreshExpiryTime.toISOString(),
             user: userWithoutPassword,
@@ -224,10 +225,12 @@ const refreshToken = async (req, res) => {
         );
 
         // Calculate expiry times
-        const accessExpiryMs = 15 * 60 * 1000; // 15 minutes
-        const refreshExpiryMs = 7 * 24 * 60 * 60 * 1000; // 7 days
-        const accessExpiryTime = new Date(Date.now() + accessExpiryMs);
-        const refreshExpiryTime = new Date(Date.now() + refreshExpiryMs);
+        const accessExpiryTime = new Date(
+            Date.now() + config.accessTokenExpiryMs,
+        );
+        const refreshExpiryTime = new Date(
+            Date.now() + config.refreshTokenExpiryMs,
+        );
 
         // Return new tokens
         const { password: _, ...userWithoutPassword } = user;
@@ -235,8 +238,6 @@ const refreshToken = async (req, res) => {
             message: "Token refreshed successfully",
             accessToken: newAccessToken,
             refreshToken: newRefreshToken,
-            accessTokenExpiresIn: config.accessTokenExpiry,
-            refreshTokenExpiresIn: config.refreshTokenExpiry,
             accessTokenExpiresAt: accessExpiryTime.toISOString(),
             refreshTokenExpiresAt: refreshExpiryTime.toISOString(),
             user: userWithoutPassword,
@@ -250,8 +251,115 @@ const refreshToken = async (req, res) => {
     }
 };
 
+//reset password
+const resetPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        // Find user by email
+        const response = await axios.get(`${config.dbUrl}/${config.binID}`, {
+            headers: {
+                "Content-Type": "application/json",
+                "X-Master-Key": `${config.xMasterKey}`,
+                "X-Access-Key": `${config.xAccessKey}`,
+            },
+        });
+        const users = response?.data?.record?.users;
+        const user = users.find((u) => u.email === email);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        // Generate reset token
+        const resetToken = jwt.sign(
+            { userId: user.id, email: user.email },
+            config.jwtResetSecret,
+            { expiresIn: config.resetTokenExpiry },
+        );
+
+        // Send reset token via email
+        await emailService.sendPasswordResetEmail(user.email, resetToken);
+
+        res.status(200).json({
+            message: "Password reset email sent successfully",
+        });
+    } catch (error) {
+        console.error("Reset password error:", error.message);
+        res.status(500).json({
+            message: "Error resetting password",
+            error: error.message,
+        });
+    }
+};
+// Update password after reset
+const updatePassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res
+                .status(400)
+                .json({ message: "Token and new password are required" });
+        }
+
+        // Verify reset token
+        let decoded;
+        try {
+            decoded = jwt.verify(token, config.jwtResetSecret);
+        } catch (error) {
+            return res
+                .status(401)
+                .json({ message: "Invalid or expired reset token" });
+        }
+
+        // Get all users
+        const response = await axios.get(`${config.dbUrl}/${config.binID}`, {
+            headers: {
+                "Content-Type": "application/json",
+                "X-Master-Key": `${config.xMasterKey}`,
+                "X-Access-Key": `${config.xAccessKey}`,
+            },
+        });
+        const users = response?.data?.record?.users;
+        const userIndex = users.findIndex((u) => u.id === decoded.userId);
+
+        if (userIndex === -1) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update user password
+        users[userIndex].password = hashedPassword;
+
+        // Save back to json-server
+        await axios.put(
+            `${config.dbUrl}/${config.binID}`,
+            { users },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Master-Key": `${config.xMasterKey}`,
+                    "X-Access-Key": `${config.xAccessKey}`,
+                },
+            },
+        );
+
+        res.status(200).json({ message: "Password updated successfully" });
+    } catch (error) {
+        console.error("Update password error:", error.message);
+        res.status(500).json({
+            message: "Error updating password",
+            error: error.message,
+        });
+    }
+};
+
 module.exports = {
     signup,
     login,
     refreshToken,
+    resetPassword,
+    updatePassword,
 };
