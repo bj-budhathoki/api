@@ -6,8 +6,8 @@ module.exports = {
     jwtRefreshSecret:
         process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET + "_refresh",
     dbUrl: process.env.DB_URL || "http://localhost:3002",
-    accessTokenExpiryMs: 15 * 60 * 1000,
-    refreshTokenExpiryMs: 7 * 24 * 60 * 60 * 1000, // Long-lived refresh tokens
+    accessTokenExpiry: "15m",
+    refreshTokenExpiry: "7d",
     resetTokenExpiry: "1h",
     binID: process.env.BIN_ID,
     xMasterKey: process.env.X_MASTER_KEY,

@@ -4,6 +4,25 @@ const axios = require("axios");
 const config = require("../config/config");
 const emailService = require("../services/emailService");
 
+// Helper function to parse time strings like "15m", "7d", "1h" to milliseconds
+const parseToMs = (timeStr) => {
+    if (typeof timeStr !== "string") return 0;
+    const unit = timeStr.slice(-1);
+    const value = parseInt(timeStr.slice(0, -1), 10);
+    switch (unit) {
+        case "s":
+            return value * 1000;
+        case "m":
+            return value * 60 * 1000;
+        case "h":
+            return value * 60 * 60 * 1000;
+        case "d":
+            return value * 24 * 60 * 60 * 1000;
+        default:
+            return isNaN(value) ? 0 : value;
+    }
+};
+
 // Signup Controller
 const signup = async (req, res) => {
     try {
@@ -54,7 +73,6 @@ const signup = async (req, res) => {
                 },
             },
         );
-        console.log({ saveResponse });
         // Generate JWT tokens
         const accessToken = jwt.sign(
             { userId: saveResponse.data.id, email: saveResponse.data.email },
@@ -70,10 +88,10 @@ const signup = async (req, res) => {
 
         // Calculate expiry times
         const accessExpiryTime = new Date(
-            Date.now() + config.accessTokenExpiryMs,
+            Date.now() + parseToMs(config.accessTokenExpiry),
         );
         const refreshExpiryTime = new Date(
-            Date.now() + config.refreshTokenExpiryMs,
+            Date.now() + parseToMs(config.refreshTokenExpiry),
         );
 
         const { password: _, ...userWithoutPassword } = saveResponse.data;
@@ -83,11 +101,12 @@ const signup = async (req, res) => {
             accessToken: accessToken,
             refreshToken: refreshToken,
             accessTokenExpiresAt: accessExpiryTime.toISOString(),
+            accessTokenExpiry: config.accessTokenExpiry,
             refreshTokenExpiresAt: refreshExpiryTime.toISOString(),
+            refreshTokenExpiry: config.refreshTokenExpiry,
             user: userWithoutPassword,
         });
     } catch (error) {
-        console.error("Signup error:", error.message);
         res.status(500).json({
             message: "Error during signup",
             error: error.message,
@@ -116,7 +135,6 @@ const login = async (req, res) => {
             },
         });
         const users = response?.data?.record?.users;
-
         // Find user by email
         const user = users.find((u) => u.email === email);
         if (!user) {
@@ -148,10 +166,10 @@ const login = async (req, res) => {
 
         // Calculate expiry times
         const accessExpiryTime = new Date(
-            Date.now() + config.accessTokenExpiryMs,
+            Date.now() + parseToMs(config.accessTokenExpiry),
         );
         const refreshExpiryTime = new Date(
-            Date.now() + config.refreshTokenExpiryMs,
+            Date.now() + parseToMs(config.refreshTokenExpiry),
         );
 
         // Return user info and tokens (without password)
@@ -161,11 +179,12 @@ const login = async (req, res) => {
             accessToken: accessToken,
             refreshToken: refreshToken,
             accessTokenExpiresAt: accessExpiryTime.toISOString(),
+            accessTokenExpiry: config.accessTokenExpiry,
             refreshTokenExpiresAt: refreshExpiryTime.toISOString(),
+            refreshTokenExpiry: config.refreshTokenExpiry,
             user: userWithoutPassword,
         });
     } catch (error) {
-        console.error("Login error:", error.message);
         res.status(500).json({
             message: "Error during login",
             error: error.message,
@@ -226,10 +245,10 @@ const refreshToken = async (req, res) => {
 
         // Calculate expiry times
         const accessExpiryTime = new Date(
-            Date.now() + config.accessTokenExpiryMs,
+            Date.now() + parseToMs(config.accessTokenExpiry),
         );
         const refreshExpiryTime = new Date(
-            Date.now() + config.refreshTokenExpiryMs,
+            Date.now() + parseToMs(config.refreshTokenExpiry),
         );
 
         // Return new tokens
@@ -239,11 +258,12 @@ const refreshToken = async (req, res) => {
             accessToken: newAccessToken,
             refreshToken: newRefreshToken,
             accessTokenExpiresAt: accessExpiryTime.toISOString(),
+            accessTokenExpiry: config.accessTokenExpiry,
             refreshTokenExpiresAt: refreshExpiryTime.toISOString(),
+            refreshTokenExpiry: config.refreshTokenExpiry,
             user: userWithoutPassword,
         });
     } catch (error) {
-        console.error("Refresh token error:", error.message);
         res.status(500).json({
             message: "Error refreshing token",
             error: error.message,
@@ -282,9 +302,9 @@ const resetPassword = async (req, res) => {
 
         res.status(200).json({
             message: "Password reset email sent successfully",
+            resetTokenExpiry: config.resetTokenExpiry,
         });
     } catch (error) {
-        console.error("Reset password error:", error.message);
         res.status(500).json({
             message: "Error resetting password",
             error: error.message,
@@ -348,7 +368,6 @@ const updatePassword = async (req, res) => {
 
         res.status(200).json({ message: "Password updated successfully" });
     } catch (error) {
-        console.error("Update password error:", error.message);
         res.status(500).json({
             message: "Error updating password",
             error: error.message,

@@ -49,11 +49,7 @@ const router = express.Router();
  *                 accessToken:
  *                   type: string
  *                 refreshToken:
- *                   type: string
- *                 accessTokenExpiresIn:
- *                   type: string
- *                 refreshTokenExpiresIn:
- *                   type: string
+ *                   type: stringssss
  *                 accessTokenExpiresAt:
  *                   type: string
  *                   format: date-time
@@ -118,10 +114,6 @@ router.post("/signup", authController.signup);
  *                   type: string
  *                 refreshToken:
  *                   type: string
- *                 accessTokenExpiresIn:
- *                   type: string
- *                 refreshTokenExpiresIn:
- *                   type: string
  *                 accessTokenExpiresAt:
  *                   type: string
  *                   format: date-time
@@ -180,10 +172,6 @@ router.post("/login", authController.login);
  *                 accessToken:
  *                   type: string
  *                 refreshToken:
- *                   type: string
- *                 accessTokenExpiresIn:
- *                   type: string
- *                 refreshTokenExpiresIn:
  *                   type: string
  *                 accessTokenExpiresAt:
  *                   type: string
